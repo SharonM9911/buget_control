@@ -31,7 +31,7 @@ jobs:
       - name: 初始化 Android 平台
         run: npx cap add android
 
-      - name: 添加 Android 文件权限
+      - name: 添加 Android 文件权限和桥接
         run: bash patch-android.sh
 
       - name: 同步文件到 Android
@@ -43,9 +43,23 @@ jobs:
       - name: 构建 Debug APK
         run: cd android && ./gradlew assembleDebug --no-daemon --warning-mode=none
 
+      - name: 签名 APK
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > budget-tracker.jks
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner sign \
+            --ks budget-tracker.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --out android/app/build/outputs/apk/debug/app-signed.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk
+
       - name: 上传 APK
         uses: actions/upload-artifact@v4
         with:
           name: budget-tracker-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/debug/app-signed.apk
+            android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
