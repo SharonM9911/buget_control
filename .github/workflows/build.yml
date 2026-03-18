@@ -31,6 +31,9 @@ jobs:
       - name: 初始化 Android 平台
         run: npx cap add android
 
+      - name: 添加 Android 文件权限
+        run: bash patch-android.sh
+
       - name: 同步文件到 Android
         run: npx cap sync android
 

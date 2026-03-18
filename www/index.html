@@ -634,16 +634,35 @@ function delGoal(gid){
   save();renderGoals();renderGoalSelect();
 }
 
-function exportBackup(){
+async function exportBackup(){
   const data={version:1,exportedAt:new Date().toISOString(),exportedAtLocal:new Date().toLocaleString('zh-CN'),state:S,cy,cm};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`预算备份_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.json`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  localStorage.setItem('budget_last_backup',new Date().toLocaleString('zh-CN'));
-  toast('备份文件已保存');renderMine();
+  const json=JSON.stringify(data,null,2);
+  const fileName=`预算备份_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.json`;
+  const saved=()=>{
+    localStorage.setItem('budget_last_backup',new Date().toLocaleString('zh-CN'));
+    toast('备份已保存');renderMine();
+  };
+  if(window.Capacitor&&window.Capacitor.isNativePlatform()){
+    try{
+      const {Filesystem,Directory}=window.Capacitor.Plugins;
+      await Filesystem.writeFile({path:fileName,data:json,directory:Directory.Documents,encoding:'utf8'});
+      try{
+        const {Share}=window.Capacitor.Plugins;
+        const result=await Filesystem.getUri({path:fileName,directory:Directory.Documents});
+        await Share.share({title:'预算备份',url:result.uri,dialogTitle:'保存备份文件'});
+      }catch(e){}
+      saved();
+    }catch(e){
+      toast('保存失败：'+e.message);
+    }
+  } else {
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=fileName;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    saved();
+  }
 }
 
 function importBackup(event){
