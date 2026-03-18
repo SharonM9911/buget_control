@@ -46,21 +46,18 @@ body{background:var(--bg3);font-family:-apple-system,BlinkMacSystemFont,'PingFan
 .tab.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:500;}
 .section{display:none;padding:16px 16px 0;}
 .section.active{display:block;}
-
-/* 主界面进度条 */
 .budget-overview{background:var(--bg);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px;}
 .overview-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
 .overview-spent{font-size:26px;font-weight:500;color:var(--text);}
 .overview-budget{font-size:13px;color:var(--text2);}
-.overview-bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:8px;}
-.overview-bar{height:100%;border-radius:4px;transition:width 0.4s ease;}
+.overview-bar-wrap{height:8px;background:var(--bg3);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.overview-bar{height:100%;border-radius:4px;transition:width 0.4s ease;max-width:100%;}
 .bar-ok{background:#1D9E75;}.bar-warn{background:#BA7517;}.bar-over{background:#A32D2D;}
 .overview-row{display:flex;justify-content:space-between;align-items:center;}
 .overview-remain{font-size:13px;color:var(--text2);}
 .overview-remain strong{color:var(--text);}
 .overview-pct{font-size:13px;font-weight:500;}
 .pct-ok{color:var(--ok);}.pct-warn{color:var(--warn);}.pct-over{color:var(--over);}
-
 .record-panel{background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;}
 .panel-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:10px;}
 .frow{display:flex;gap:8px;flex-wrap:wrap;}
@@ -88,7 +85,7 @@ select:focus,input:focus{border-color:var(--purple);}
 .cat-amt{font-size:13px;color:var(--text2);}
 .cat-amt strong{color:var(--text);}
 .pbar{height:5px;background:var(--bg3);border-radius:3px;margin-bottom:7px;overflow:hidden;}
-.pfill{height:100%;border-radius:3px;transition:width 0.3s;}
+.pfill{height:100%;border-radius:3px;transition:width 0.3s;max-width:100%;}
 .p-ok{background:#1D9E75;}.p-warn{background:#BA7517;}.p-over{background:#A32D2D;}
 .cat-bot{display:flex;justify-content:space-between;align-items:center;}
 .s-ok{font-size:12px;color:var(--ok);}
@@ -100,37 +97,24 @@ select:focus,input:focus{border-color:var(--purple);}
 .manage-row span{font-size:13px;color:var(--text2);font-weight:500;}
 .addform{display:none;background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;}
 .addform.open{display:block;}
-.txns{margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;}
-.txns-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:10px;}
-.txn{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid var(--border);}
-.txn:last-child{border-bottom:none;}
-.txn-l{display:flex;flex-direction:column;gap:2px;}
-.txn-cat{font-size:13px;}
-.txn-note{font-size:12px;color:var(--text2);}
-.txn-r{display:flex;align-items:center;gap:10px;}
-.txn-amt{font-size:13px;font-weight:500;}
-.txn-del{font-size:13px;color:var(--text3);cursor:pointer;padding:2px 8px;border-radius:4px;}
-.txn-del:active{background:var(--bg2);}
 .empty{font-size:13px;color:var(--text3);padding:12px 0;text-align:center;}
-
-/* 消费记录页 */
 .records-filter{background:var(--bg);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:center;}
 .records-filter select{flex:1;font-size:13px;padding:7px 10px;}
 .records-count{font-size:12px;color:var(--text3);white-space:nowrap;}
 .record-group{margin-bottom:16px;}
 .record-group-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;padding:0 2px;}
 .record-item{background:var(--bg);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
-.record-item-l{display:flex;flex-direction:column;gap:3px;}
+.record-item-l{display:flex;flex-direction:column;gap:3px;flex:1;}
 .record-cat{font-size:14px;font-weight:500;}
-.record-meta{font-size:12px;color:var(--text2);display:flex;gap:6px;align-items:center;}
+.record-meta{font-size:12px;color:var(--text2);}
+.record-time{font-size:11px;color:var(--text3);}
 .record-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
 .tag{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);}
-.record-item-r{display:flex;align-items:center;gap:10px;}
+.record-item-r{display:flex;align-items:center;gap:10px;flex:none;}
 .record-amt{font-size:14px;font-weight:500;}
+.record-amt.over-amt{color:var(--over);}
 .record-del{font-size:13px;color:var(--text3);cursor:pointer;padding:2px 8px;border-radius:4px;}
 .record-del:active{background:var(--bg2);}
-
-/* 存款目标页 */
 .goal-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;}
 .goal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .goal-name{font-size:15px;font-weight:500;}
@@ -142,25 +126,20 @@ select:focus,input:focus{border-color:var(--purple);}
 .goal-eta{font-size:12px;color:var(--text2);}
 .goal-acts{display:flex;gap:6px;}
 .deposit-panel{background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;}
-
-/* 我的页面 */
 .mine-section{margin-bottom:20px;}
-.mine-section-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding:0 2px;}
+.mine-section-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.5px;margin-bottom:8px;padding:0 2px;}
 .mine-card{background:var(--bg);border-radius:var(--radius-lg);overflow:hidden;border:0.5px solid var(--border);}
 .mine-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--border);}
 .mine-row:last-child{border-bottom:none;}
 .mine-row-left{display:flex;flex-direction:column;gap:2px;}
 .mine-row-title{font-size:14px;color:var(--text);}
 .mine-row-sub{font-size:12px;color:var(--text2);}
-.mine-row-right{font-size:13px;color:var(--text2);}
 .mine-row-arrow{color:var(--text3);font-size:14px;}
 .mine-row.tappable{cursor:pointer;}
 .mine-row.tappable:active{background:var(--bg2);}
 .mine-row.danger .mine-row-title{color:var(--over);}
 .backup-sub-panel{display:none;background:var(--bg2);padding:12px 16px;border-top:0.5px solid var(--border);}
 .backup-sub-panel.open{display:block;}
-.backup-sub-panel .frow{gap:8px;}
-
 .toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:999;}
 .toast{background:var(--purple);color:var(--purple-light);padding:10px 20px;border-radius:var(--radius-lg);font-size:13px;opacity:0;transition:opacity 0.25s;white-space:nowrap;}
 .toast.show{opacity:1;}
@@ -188,7 +167,6 @@ select:focus,input:focus{border-color:var(--purple);}
   <!-- 月度预算 -->
   <div id="tab-budget" class="section active">
     <div style="height:14px;"></div>
-
     <div class="budget-overview">
       <div class="overview-top">
         <div class="overview-spent" id="ov-spent">¥0</div>
@@ -202,7 +180,6 @@ select:focus,input:focus{border-color:var(--purple);}
         <div class="overview-pct pct-ok" id="ov-pct">0%</div>
       </div>
     </div>
-
     <div class="record-panel">
       <div class="panel-label">快速记录</div>
       <div class="frow" style="margin-bottom:8px;">
@@ -214,9 +191,7 @@ select:focus,input:focus{border-color:var(--purple);}
         <button class="btn" onclick="addExp()">记录</button>
       </div>
     </div>
-
     <div class="cats" id="cats-list"></div>
-
     <div class="divider"></div>
     <div class="manage-row">
       <span>管理分类</span>
@@ -231,11 +206,6 @@ select:focus,input:focus{border-color:var(--purple);}
         <input type="number" id="nc-budget" placeholder="月限额 ¥" style="flex:1;"/>
         <button class="btn" onclick="addCat()">添加</button>
       </div>
-    </div>
-
-    <div class="txns">
-      <div class="txns-label">本月记录</div>
-      <div id="txn-list"></div>
     </div>
   </div>
 
@@ -287,7 +257,6 @@ select:focus,input:focus{border-color:var(--purple);}
   <!-- 我的 -->
   <div id="tab-mine" class="section">
     <div style="height:14px;"></div>
-
     <div class="mine-section">
       <div class="mine-section-label">数据</div>
       <div class="mine-card">
@@ -319,8 +288,17 @@ select:focus,input:focus{border-color:var(--purple);}
         </div>
       </div>
     </div>
-
     <div class="mine-section">
+      <div class="mine-section-label">关于</div>
+      <div class="mine-card" style="margin-bottom:20px;">
+        <div class="mine-row">
+          <div class="mine-row-left">
+            <div class="mine-row-title">当前版本</div>
+            <div class="mine-row-sub">v1.2.0</div>
+          </div>
+          <div class="mine-row-right" style="font-size:11px;color:var(--text3);">升级前请先导出备份</div>
+        </div>
+      </div>
       <div class="mine-section-label">其他</div>
       <div class="mine-card">
         <div class="mine-row tappable danger" onclick="clearAllData()">
@@ -369,6 +347,14 @@ function mTxns(){return S.txns.filter(t=>t.y===cy&&t.m===cm);}
 function spent(cid){return mTxns().filter(t=>t.cid===cid).reduce((s,t)=>s+t.amt,0);}
 function totalSaved(gid){const g=S.goals.find(x=>x.id===gid);return g?g.deposits.reduce((s,d)=>s+d.amt,0):0;}
 
+function fmtTime(ts){
+  if(!ts)return '';
+  const d=new Date(ts);
+  const h=String(d.getHours()).padStart(2,'0');
+  const mi=String(d.getMinutes()).padStart(2,'0');
+  return `${d.getMonth()+1}/${d.getDate()} ${h}:${mi}`;
+}
+
 function switchTab(t,btn){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -392,7 +378,6 @@ function render(){
   renderOverview();
   renderCats();
   renderCatSelect();
-  renderTxns();
   renderRecords();
   renderGoals();
   renderGoalSelect();
@@ -403,18 +388,18 @@ function renderOverview(){
   const tb=S.cats.reduce((s,c)=>s+c.budget,0);
   const ts=S.cats.reduce((s,c)=>s+spent(c.id),0);
   const rem=tb-ts;
-  const pct=tb>0?Math.min(1,ts/tb):0;
+  const pct=tb>0?ts/tb:0;
   const pctRound=Math.round(pct*100);
   const isOver=pct>=1,isWarn=pct>=0.8&&!isOver;
   const barCls=isOver?'bar-over':isWarn?'bar-warn':'bar-ok';
   const pctCls=isOver?'pct-over':isWarn?'pct-warn':'pct-ok';
-
   document.getElementById('ov-spent').textContent='¥'+Math.round(ts).toLocaleString();
   document.getElementById('ov-budget').textContent='/ ¥'+tb.toLocaleString()+' 本月预算';
   const bar=document.getElementById('ov-bar');
-  bar.style.width=pctRound+'%';
+  bar.style.width=Math.min(100,pctRound)+'%';
   bar.className='overview-bar '+barCls;
-  document.getElementById('ov-remain').innerHTML=`剩余 <strong>¥${Math.round(Math.max(0,rem)).toLocaleString()}</strong>`;
+  const remText=rem<0?`超出 <strong>¥${Math.round(-rem).toLocaleString()}</strong>`:`剩余 <strong>¥${Math.round(rem).toLocaleString()}</strong>`;
+  document.getElementById('ov-remain').innerHTML=remText;
   const pctEl=document.getElementById('ov-pct');
   pctEl.textContent=pctRound+'%';
   pctEl.className='overview-pct '+pctCls;
@@ -430,8 +415,9 @@ function renderCats(){
     const bw=Math.min(100,Math.round(pct*100));
     const bc=isOver?'p-over':isWarn?'p-warn':'p-ok';
     const cc=isOver?'over-c':isWarn?'warn-c':'';
+    const overAmt=sp-c.budget;
     const st=isOver
-      ?`<span class="s-over">已超限额，停止记录</span>`
+      ?`<span class="s-over">超出预算 ¥${Math.round(overAmt).toLocaleString()}</span>`
       :isWarn?`<span class="s-warn">已用 ${Math.round(pct*100)}%，接近上限</span>`
       :`<span class="s-ok">已用 ${Math.round(pct*100)}%</span>`;
     const d=document.createElement('div');
@@ -454,58 +440,46 @@ function renderCatSelect(){
   }
 }
 
-function renderTxns(){
-  const el=document.getElementById('txn-list');
-  const txns=mTxns().slice().reverse();
-  if(!txns.length){el.innerHTML='<div class="empty">本月暂无记录</div>';return;}
-  el.innerHTML=txns.map(t=>{
-    const cat=S.cats.find(c=>c.id===t.cid);
-    const cn=cat?`${cat.icon} ${cat.name}`:'已删除';
-    return `<div class="txn"><div class="txn-l"><div class="txn-cat">${cn}</div>${t.note?`<div class="txn-note">${t.note}</div>`:''}</div><div class="txn-r"><div class="txn-amt">¥${t.amt.toFixed(2)}</div><div class="txn-del" onclick="delTxn(${t.id})">✕</div></div></div>`;
-  }).join('');
-}
-
 function renderRecords(){
   const el=document.getElementById('records-list');
   if(!el)return;
-
   const filterCat=document.getElementById('rec-filter-cat')?.value||'';
   const filterMonth=document.getElementById('rec-filter-month')?.value||'';
-
   let txns=[...S.txns].reverse();
   if(filterCat)txns=txns.filter(t=>t.cid===parseInt(filterCat));
   if(filterMonth){
     const[fy,fm]=filterMonth.split('-').map(Number);
     txns=txns.filter(t=>t.y===fy&&t.m===fm);
   }
-
   document.getElementById('rec-count').textContent=txns.length+'条';
-
   if(!txns.length){el.innerHTML='<div class="empty">暂无记录</div>';return;}
-
   const groups={};
   txns.forEach(t=>{
     const key=t.y+'年'+MONTHS[t.m];
     if(!groups[key])groups[key]=[];
     groups[key].push(t);
   });
-
   el.innerHTML=Object.entries(groups).map(([label,list])=>`
     <div class="record-group">
       <div class="record-group-label">${label}</div>
       ${list.map(t=>{
         const cat=S.cats.find(c=>c.id===t.cid);
         const cn=cat?`${cat.icon} ${cat.name}`:'已删除';
+        const catBudget=cat?cat.budget:0;
+        const catSpent=spent(t.cid);
+        const isOverBudget=catSpent>catBudget&&catBudget>0;
         const tagsHtml=t.tags&&t.tags.length?`<div class="record-tags">${t.tags.map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>`:'';
+        const timeStr=t.ts?fmtTime(t.ts):'';
         return `<div class="record-item">
           <div class="record-item-l">
             <div class="record-cat">${cn}</div>
             <div class="record-meta">${t.note||'无备注'}</div>
+            ${timeStr?`<div class="record-time">${timeStr}</div>`:''}
             ${tagsHtml}
           </div>
           <div class="record-item-r">
-            <div class="record-amt">¥${t.amt.toFixed(2)}</div>
-            <div class="record-del" onclick="delTxn(${t.id});renderRecords()">✕</div>
+            <div class="record-amt${isOverBudget?' over-amt':''}">¥${t.amt.toFixed(2)}</div>
+            <div class="record-del" onclick="delTxn(${t.id})">✕</div>
           </div>
         </div>`;
       }).join('')}
@@ -569,13 +543,14 @@ function addExp(){
   if(!cid||isNaN(amt)||amt<=0){toast('请填写金额');return;}
   const cat=S.cats.find(c=>c.id===cid);
   if(!cat)return;
-  if(spent(cid)>=cat.budget){toast(`「${cat.name}」已达限额，无法记录`);return;}
-  S.txns.push({id:S.nid++,cid,amt,note,tags:[],y:cy,m:cm});
+  const sp=spent(cid);
+  const willOver=sp+amt>cat.budget;
+  S.txns.push({id:S.nid++,cid,amt,note,tags:[],y:cy,m:cm,ts:Date.now()});
   document.getElementById('exp-amt').value='';
   document.getElementById('exp-note').value='';
   save();render();renderRecordMonthFilter();
   const nsp=spent(cid),p=nsp/cat.budget;
-  if(nsp>=cat.budget)toast(`已达「${cat.name}」100% 限额！`);
+  if(willOver)toast(`「${cat.name}」已超出预算，已标记`);
   else if(p>=0.8)toast(`注意：「${cat.name}」已用 ${Math.round(p*100)}%`);
   else toast('已记录');
 }
@@ -609,7 +584,7 @@ function editBudget(cid){
 
 function delCat(cid){
   const c=S.cats.find(x=>x.id===cid);if(!c)return;
-  if(!confirm(`删除「${c.name}」及本月相关记录？`))return;
+  if(!confirm(`删除「${c.name}」及相关记录？`))return;
   S.cats=S.cats.filter(x=>x.id!==cid);
   S.txns=S.txns.filter(t=>t.cid!==cid);
   save();render();
@@ -713,7 +688,7 @@ function toast(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 load();render();renderRecordMonthFilter();
 </script>
 </body>
