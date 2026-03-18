@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>预算 & 存款追踪</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#eeede8;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
+  --radius:8px;--radius-lg:12px;
+  --ok:#0F6E56;--warn:#BA7517;--over:#A32D2D;
+  --ok-bg:#E1F5EE;--warn-bg:#FAEEDA;--over-bg:#FCEBEB;
+  --ok-border:#1D9E75;--warn-border:#BA7517;--over-border:#A32D2D;
+  --purple:#3C3489;--purple-light:#EEEDFE;--purple-text:#26215C;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+    --border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.22);
+    --ok-bg:#085041;--warn-bg:#412402;--over-bg:#501313;
+    --purple:#7F77DD;--purple-light:#26215C;--purple-text:#CECBF6;
+  }
+}
+body{background:var(--bg3);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:var(--text);min-height:100vh;}
+.app{max-width:480px;margin:0 auto;background:var(--bg3);min-height:100vh;padding-bottom:40px;}
+.header{background:var(--bg);border-bottom:0.5px solid var(--border);padding:16px 20px 0;}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.app-title{font-size:18px;font-weight:500;}
+.month-nav{display:flex;align-items:center;gap:8px;}
+.month-nav button{background:none;border:0.5px solid var(--border2);border-radius:var(--radius);padding:4px 12px;cursor:pointer;color:var(--text);font-size:13px;}
+.month-nav span{font-size:13px;color:var(--text2);min-width:96px;text-align:center;}
+.tabs{display:flex;gap:0;}
+.tab{flex:1;padding:10px;font-size:14px;cursor:pointer;color:var(--text2);border:none;border-bottom:2px solid transparent;background:none;font-weight:400;}
+.tab.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:500;}
+.section{display:none;padding:16px 16px 0;}
+.section.active{display:block;}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.mc{background:var(--bg);border-radius:var(--radius);padding:12px 14px;}
+.mc-label{font-size:11px;color:var(--text2);margin-bottom:3px;}
+.mc-val{font-size:19px;font-weight:500;}
+.mc-val.ok{color:var(--ok);}.mc-val.warn{color:var(--warn);}.mc-val.over{color:var(--over);}
+.record-panel{background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;}
+.panel-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:10px;}
+.frow{display:flex;gap:8px;flex-wrap:wrap;}
+select,input[type=text],input[type=number]{font-size:14px;padding:9px 11px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);outline:none;-webkit-appearance:none;}
+select:focus,input:focus{border-color:var(--purple);}
+.frow select{flex:1;min-width:120px;}
+.frow input[type=number]{width:110px;flex:none;}
+.frow input[type=text]{flex:1;min-width:100px;}
+.btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);padding:9px 18px;font-size:14px;cursor:pointer;font-weight:500;white-space:nowrap;}
+.btn:active{opacity:0.8;}
+.btn-sm{font-size:12px;padding:5px 11px;border:0.5px solid var(--border2);border-radius:var(--radius);background:none;cursor:pointer;color:var(--text2);}
+.btn-sm:active{background:var(--bg2);}
+.cats{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.cat{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;}
+.cat.warn-c{border-color:var(--warn-border);background:var(--warn-bg);}
+.cat.over-c{border-color:var(--over-border);background:var(--over-bg);}
+.cat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.cat-name{font-size:14px;font-weight:500;}
+.cat-amt{font-size:13px;color:var(--text2);}
+.cat-amt strong{color:var(--text);}
+.pbar{height:5px;background:var(--bg3);border-radius:3px;margin-bottom:7px;overflow:hidden;}
+.pfill{height:100%;border-radius:3px;transition:width 0.3s;}
+.p-ok{background:#1D9E75;}.p-warn{background:#BA7517;}.p-over{background:#A32D2D;}
+.cat-bot{display:flex;justify-content:space-between;align-items:center;}
+.s-ok{font-size:12px;color:var(--ok);}
+.s-warn{font-size:12px;color:var(--warn);}
+.s-over{font-size:12px;color:var(--over);}
+.cat-acts{display:flex;gap:6px;}
+.divider{border-top:0.5px solid var(--border);margin:14px 0;}
+.manage-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.manage-row span{font-size:13px;color:var(--text2);font-weight:500;}
+.addform{display:none;background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;}
+.addform.open{display:block;}
+.addform .frow{margin-bottom:0;}
+.txns{margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;}
+.txns-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:10px;}
+.txn{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid var(--border);}
+.txn:last-child{border-bottom:none;}
+.txn-l{display:flex;flex-direction:column;gap:2px;}
+.txn-cat{font-size:13px;}
+.txn-note{font-size:12px;color:var(--text2);}
+.txn-r{display:flex;align-items:center;gap:10px;}
+.txn-amt{font-size:13px;font-weight:500;}
+.txn-del{font-size:13px;color:var(--text3);cursor:pointer;padding:2px 8px;border-radius:4px;}
+.txn-del:active{background:var(--bg2);}
+.empty{font-size:13px;color:var(--text3);padding:8px 0;}
+.goal-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;}
+.goal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.goal-name{font-size:15px;font-weight:500;}
+.goal-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.goal-pct{font-size:22px;font-weight:500;color:var(--ok);}
+.goal-amounts{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px;}
+.goal-amounts strong{color:var(--text);}
+.goal-bot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.goal-eta{font-size:12px;color:var(--text2);}
+.goal-acts{display:flex;gap:6px;}
+.toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:999;}
+.toast{background:var(--purple);color:var(--purple-light);padding:10px 20px;border-radius:var(--radius-lg);font-size:13px;opacity:0;transition:opacity 0.25s;white-space:nowrap;}
+.toast.show{opacity:1;}
+.deposit-panel{background:var(--bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="app-title">预算 & 存款</div>
+      <div class="month-nav">
+        <button onclick="chMonth(-1)">‹</button>
+        <span id="mlabel"></span>
+        <button onclick="chMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('budget',this)">月度预算</button>
+      <button class="tab" onclick="switchTab('savings',this)">存款目标</button>
+    </div>
+  </div>
+
+  <div id="tab-budget" class="section active">
+    <div style="height:14px;"></div>
+    <div class="summary">
+      <div class="mc"><div class="mc-label">总预算</div><div class="mc-val" id="s-budget">¥0</div></div>
+      <div class="mc"><div class="mc-label">已消费</div><div class="mc-val" id="s-spent">¥0</div></div>
+      <div class="mc"><div class="mc-label">剩余</div><div class="mc-val" id="s-remain">¥0</div></div>
+    </div>
+
+    <div class="record-panel">
+      <div class="panel-label">快速记录</div>
+      <div class="frow" style="margin-bottom:8px;">
+        <select id="exp-cat"></select>
+        <input type="number" id="exp-amt" placeholder="金额 ¥" min="0" step="0.01"/>
+      </div>
+      <div class="frow">
+        <input type="text" id="exp-note" placeholder="备注（如：买了昂贵水果）"/>
+        <button class="btn" onclick="addExp()">记录</button>
+      </div>
+    </div>
+
+    <div class="cats" id="cats-list"></div>
+
+    <div class="divider"></div>
+    <div class="manage-row">
+      <span>管理分类</span>
+      <button class="btn-sm" onclick="toggleForm('addcat-form')">+ 新增分类</button>
+    </div>
+    <div class="addform" id="addcat-form">
+      <div class="frow" style="margin-bottom:8px;">
+        <input type="text" id="nc-icon" placeholder="图标🛒" style="width:64px;flex:none;"/>
+        <input type="text" id="nc-name" placeholder="分类名称" style="flex:1;"/>
+      </div>
+      <div class="frow">
+        <input type="number" id="nc-budget" placeholder="月限额 ¥" style="flex:1;"/>
+        <button class="btn" onclick="addCat()">添加</button>
+      </div>
+    </div>
+
+    <div class="txns">
+      <div class="txns-label">本月记录</div>
+      <div id="txn-list"></div>
+    </div>
+  </div>
+
+  <div id="tab-savings" class="section">
+    <div style="height:14px;"></div>
+    <div class="deposit-panel">
+      <div class="panel-label">存入资金</div>
+      <div class="frow" style="margin-bottom:8px;">
+        <select id="dep-goal" style="flex:1;"></select>
+        <input type="number" id="dep-amt" placeholder="存入金额 ¥" style="width:130px;flex:none;"/>
+      </div>
+      <div class="frow">
+        <input type="text" id="dep-note" placeholder="备注（可选）" style="flex:1;"/>
+        <button class="btn" onclick="addDeposit()">存入</button>
+      </div>
+    </div>
+
+    <div id="goals-list"></div>
+
+    <div class="divider"></div>
+    <div class="manage-row">
+      <span>新增存款目标</span>
+      <button class="btn-sm" onclick="toggleForm('addgoal-form')">+ 新增</button>
+    </div>
+    <div class="addform" id="addgoal-form">
+      <div class="frow" style="margin-bottom:8px;">
+        <input type="text" id="ng-name" placeholder="目标名称（如：电子产品基金）" style="flex:1;"/>
+      </div>
+      <div class="frow">
+        <input type="number" id="ng-target" placeholder="目标金额 ¥" style="flex:1;"/>
+        <input type="number" id="ng-monthly" placeholder="每月存入 ¥" style="flex:1;"/>
+        <button class="btn" onclick="addGoal()">添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<script>
+const MONTHS=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+let now=new Date(),cy=now.getFullYear(),cm=now.getMonth();
+const SK='budget_tracker_v1';
+
+let S={
+  cats:[
+    {id:1,icon:'🛒',name:'买菜',budget:800},
+    {id:2,icon:'🍿',name:'零食',budget:200},
+    {id:3,icon:'🍎',name:'水果',budget:300},
+    {id:4,icon:'👕',name:'服饰',budget:500},
+    {id:5,icon:'🍜',name:'外卖/餐厅',budget:600},
+    {id:6,icon:'🎮',name:'娱乐/网购',budget:300},
+    {id:7,icon:'🔋',name:'零散小消费',budget:100},
+  ],
+  txns:[],
+  goals:[{id:1,name:'电子产品基金',target:2000,monthly:500,deposits:[]}],
+  nid:100,ncid:10,ngid:10
+};
+
+function save(){try{localStorage.setItem(SK,JSON.stringify({S,cy,cm}));}catch(e){}}
+function load(){
+  try{
+    const d=localStorage.getItem(SK);
+    if(d){const p=JSON.parse(d);S=p.S;cy=p.cy;cm=p.cm;}
+  }catch(e){}
+}
+
+function mTxns(){return S.txns.filter(t=>t.y===cy&&t.m===cm);}
+function spent(cid){return mTxns().filter(t=>t.cid===cid).reduce((s,t)=>s+t.amt,0);}
+function totalSaved(gid){const g=S.goals.find(x=>x.id===gid);return g?g.deposits.reduce((s,d)=>s+d.amt,0):0;}
+
+function switchTab(t,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+  render();
+}
+
+function chMonth(d){
+  cm+=d;
+  if(cm<0){cm=11;cy--;}
+  if(cm>11){cm=0;cy++;}
+  save();render();
+}
+
+function toggleForm(id){document.getElementById(id).classList.toggle('open');}
+
+function render(){
+  document.getElementById('mlabel').textContent=cy+'年 '+MONTHS[cm];
+  renderSummary();renderCats();renderCatSelect();renderTxns();renderGoals();renderGoalSelect();
+}
+
+function renderSummary(){
+  const tb=S.cats.reduce((s,c)=>s+c.budget,0);
+  const ts=S.cats.reduce((s,c)=>s+spent(c.id),0);
+  const rem=tb-ts;
+  document.getElementById('s-budget').textContent='¥'+tb.toLocaleString();
+  const se=document.getElementById('s-spent');
+  se.textContent='¥'+Math.round(ts).toLocaleString();
+  se.className='mc-val'+(ts>=tb?' over':ts>=tb*0.8?' warn':'');
+  const re=document.getElementById('s-remain');
+  re.textContent='¥'+Math.round(Math.max(0,rem)).toLocaleString();
+  re.className='mc-val'+(rem<0?' over':rem<tb*0.2?' warn':' ok');
+}
+
+function renderCats(){
+  const el=document.getElementById('cats-list');
+  el.innerHTML='';
+  S.cats.forEach(c=>{
+    const sp=spent(c.id);
+    const pct=c.budget>0?sp/c.budget:0;
+    const isOver=pct>=1,isWarn=pct>=0.8&&!isOver;
+    const bw=Math.min(100,Math.round(pct*100));
+    const bc=isOver?'p-over':isWarn?'p-warn':'p-ok';
+    const cc=isOver?'over-c':isWarn?'warn-c':'';
+    const st=isOver
+      ?`<span class="s-over">已超限额，停止记录</span>`
+      :isWarn?`<span class="s-warn">已用 ${Math.round(pct*100)}%，接近上限</span>`
+      :`<span class="s-ok">已用 ${Math.round(pct*100)}%</span>`;
+    const d=document.createElement('div');
+    d.className=`cat ${cc}`;
+    d.innerHTML=`
+      <div class="cat-top">
+        <div class="cat-name">${c.icon} ${c.name}</div>
+        <div class="cat-amt"><strong>¥${Math.round(sp).toLocaleString()}</strong> / ¥${c.budget.toLocaleString()}</div>
+      </div>
+      <div class="pbar"><div class="pfill ${bc}" style="width:${bw}%"></div></div>
+      <div class="cat-bot">
+        <div>${st}</div>
+        <div class="cat-acts">
+          <button class="btn-sm" onclick="editBudget(${c.id})">改限额</button>
+          <button class="btn-sm" onclick="delCat(${c.id})">删除</button>
+        </div>
+      </div>`;
+    el.appendChild(d);
+  });
+}
+
+function renderCatSelect(){
+  const s=document.getElementById('exp-cat');
+  const cur=s.value;
+  s.innerHTML=S.cats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  if(cur)s.value=cur;
+}
+
+function renderTxns(){
+  const el=document.getElementById('txn-list');
+  const txns=mTxns().slice().reverse();
+  if(!txns.length){el.innerHTML='<div class="empty">本月暂无记录</div>';return;}
+  el.innerHTML=txns.map(t=>{
+    const cat=S.cats.find(c=>c.id===t.cid);
+    const cn=cat?`${cat.icon} ${cat.name}`:'已删除';
+    return `<div class="txn">
+      <div class="txn-l">
+        <div class="txn-cat">${cn}</div>
+        ${t.note?`<div class="txn-note">${t.note}</div>`:''}
+      </div>
+      <div class="txn-r">
+        <div class="txn-amt">¥${t.amt.toFixed(2)}</div>
+        <div class="txn-del" onclick="delTxn(${t.id})">✕</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoals(){
+  const el=document.getElementById('goals-list');
+  if(!el)return;
+  el.innerHTML='';
+  S.goals.forEach(g=>{
+    const saved=totalSaved(g.id);
+    const pct=g.target>0?Math.min(1,saved/g.target):0;
+    const rem=Math.max(0,g.target-saved);
+    const months=g.monthly>0?Math.ceil(rem/g.monthly):null;
+    const bw=Math.round(pct*100);
+    const done=pct>=1;
+    const d=document.createElement('div');
+    d.className='goal-card';
+    d.innerHTML=`
+      <div class="goal-top">
+        <div><div class="goal-name">${g.name}</div><div class="goal-sub">每月存入目标 ¥${g.monthly.toLocaleString()}</div></div>
+        <div class="goal-pct">${bw}%</div>
+      </div>
+      <div class="goal-amounts">
+        <span>已存 <strong>¥${Math.round(saved).toLocaleString()}</strong></span>
+        <span>目标 <strong>¥${g.target.toLocaleString()}</strong></span>
+      </div>
+      <div class="pbar"><div class="pfill p-ok" style="width:${bw}%"></div></div>
+      <div class="goal-bot">
+        <div class="goal-eta">${done?'目标已达成！':months?`还需约 ${months} 个月`:'继续加油'}</div>
+        <div class="goal-acts">
+          <button class="btn-sm" onclick="editGoal(${g.id})">编辑</button>
+          <button class="btn-sm" onclick="delGoal(${g.id})">删除</button>
+        </div>
+      </div>`;
+    el.appendChild(d);
+  });
+}
+
+function renderGoalSelect(){
+  const s=document.getElementById('dep-goal');
+  if(!s)return;
+  const cur=s.value;
+  s.innerHTML=S.goals.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  if(cur)s.value=cur;
+}
+
+function addExp(){
+  const cid=parseInt(document.getElementById('exp-cat').value);
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const note=document.getElementById('exp-note').value.trim();
+  if(!cid||isNaN(amt)||amt<=0){toast('请填写金额');return;}
+  const cat=S.cats.find(c=>c.id===cid);
+  if(!cat)return;
+  if(spent(cid)>=cat.budget){toast(`「${cat.name}」已达限额，无法记录`);return;}
+  S.txns.push({id:S.nid++,cid,amt,note,y:cy,m:cm});
+  document.getElementById('exp-amt').value='';
+  document.getElementById('exp-note').value='';
+  save();render();
+  const nsp=spent(cid),p=nsp/cat.budget;
+  if(nsp>=cat.budget)toast(`已达「${cat.name}」100% 限额！`);
+  else if(p>=0.8)toast(`注意：「${cat.name}」已用 ${Math.round(p*100)}%`);
+  else toast('已记录');
+}
+
+function addDeposit(){
+  const gid=parseInt(document.getElementById('dep-goal').value);
+  const amt=parseFloat(document.getElementById('dep-amt').value);
+  const note=document.getElementById('dep-note').value.trim();
+  if(!gid||isNaN(amt)||amt<=0){toast('请填写金额');return;}
+  const g=S.goals.find(x=>x.id===gid);
+  if(!g)return;
+  g.deposits.push({id:S.nid++,amt,note,date:new Date().toLocaleDateString('zh-CN')});
+  document.getElementById('dep-amt').value='';
+  document.getElementById('dep-note').value='';
+  save();renderGoals();renderGoalSelect();
+  const saved=totalSaved(gid);
+  if(saved>=g.target)toast(`恭喜！「${g.name}」目标已达成`);
+  else toast(`已存入 ¥${amt}，累计 ¥${Math.round(saved).toLocaleString()}`);
+}
+
+function delTxn(id){S.txns=S.txns.filter(t=>t.id!==id);save();render();}
+
+function editBudget(cid){
+  const c=S.cats.find(x=>x.id===cid);if(!c)return;
+  const v=prompt(`修改「${c.name}」月限额（当前 ¥${c.budget}）：`);
+  if(v===null)return;
+  const n=parseFloat(v);
+  if(isNaN(n)||n<0){toast('请输入有效金额');return;}
+  c.budget=n;save();render();
+}
+
+function delCat(cid){
+  const c=S.cats.find(x=>x.id===cid);if(!c)return;
+  if(!confirm(`删除「${c.name}」及本月相关记录？`))return;
+  S.cats=S.cats.filter(x=>x.id!==cid);
+  S.txns=S.txns.filter(t=>t.cid!==cid);
+  save();render();
+}
+
+function addCat(){
+  const icon=document.getElementById('nc-icon').value.trim()||'📦';
+  const name=document.getElementById('nc-name').value.trim();
+  const budget=parseFloat(document.getElementById('nc-budget').value);
+  if(!name){toast('请填写分类名称');return;}
+  if(isNaN(budget)||budget<=0){toast('请填写有效限额');return;}
+  S.cats.push({id:S.ncid++,icon,name,budget});
+  document.getElementById('nc-icon').value='';
+  document.getElementById('nc-name').value='';
+  document.getElementById('nc-budget').value='';
+  document.getElementById('addcat-form').classList.remove('open');
+  save();render();toast(`已添加「${name}」`);
+}
+
+function addGoal(){
+  const name=document.getElementById('ng-name').value.trim();
+  const target=parseFloat(document.getElementById('ng-target').value);
+  const monthly=parseFloat(document.getElementById('ng-monthly').value)||0;
+  if(!name){toast('请填写目标名称');return;}
+  if(isNaN(target)||target<=0){toast('请填写有效金额');return;}
+  S.goals.push({id:S.ngid++,name,target,monthly,deposits:[]});
+  document.getElementById('ng-name').value='';
+  document.getElementById('ng-target').value='';
+  document.getElementById('ng-monthly').value='';
+  document.getElementById('addgoal-form').classList.remove('open');
+  save();renderGoals();renderGoalSelect();toast(`已添加「${name}」`);
+}
+
+function editGoal(gid){
+  const g=S.goals.find(x=>x.id===gid);if(!g)return;
+  const v=prompt(`修改「${g.name}」目标金额（当前 ¥${g.target}）：`);
+  if(v===null)return;
+  const n=parseFloat(v);
+  if(isNaN(n)||n<=0){toast('请输入有效金额');return;}
+  g.target=n;save();renderGoals();
+}
+
+function delGoal(gid){
+  const g=S.goals.find(x=>x.id===gid);if(!g)return;
+  if(!confirm(`删除目标「${g.name}」及所有存款记录？`))return;
+  S.goals=S.goals.filter(x=>x.id!==gid);
+  save();renderGoals();renderGoalSelect();
+}
+
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+load();render();
+</script>
+</body>
+</html>

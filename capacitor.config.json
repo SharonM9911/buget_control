@@ -1,0 +1,11 @@
+{
+  "appId": "com.sharon.budgettracker",
+  "appName": "预算追踪",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
