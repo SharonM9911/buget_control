@@ -1,5 +1,5 @@
 const CACHE = 'budget-tracker-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const ASSETS = ['/buget_control/', '/buget_control/index.html', '/buget_control/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
