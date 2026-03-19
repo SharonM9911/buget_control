@@ -50,19 +50,15 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > budget-tracker.jks
-            $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner sign \
-              --ks budget-tracker.jks \
-              --ks-pass pass:$KEYSTORE_PASSWORD \
-              --key-pass pass:$KEY_PASSWORD \
-              --ks-key-alias $KEY_ALIAS \
-              --out android/app/build/outputs/apk/debug/app-signed.apk \
-              android/app/build/outputs/apk/debug/app-debug.apk
-            echo "APK signed successfully"
-          else
-            echo "No keystore found, skipping signing"
-          fi
+          echo "$KEYSTORE_BASE64" | tr -d '\n' | base64 -d > budget-tracker.jks
+          BUILD_TOOLS=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $BUILD_TOOLS/apksigner sign \
+            --ks budget-tracker.jks \
+            --ks-pass pass:$KEYSTORE_PASSWORD \
+            --key-pass pass:$KEY_PASSWORD \
+            --ks-key-alias $KEY_ALIAS \
+            --out android/app/build/outputs/apk/debug/app-signed.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: 上传 APK
         uses: actions/upload-artifact@v4
