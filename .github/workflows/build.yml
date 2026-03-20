@@ -44,6 +44,7 @@ jobs:
         run: cd android && ./gradlew assembleDebug --no-daemon --warning-mode=none
 
       - name: 签名 APK
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

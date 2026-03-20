@@ -336,7 +336,7 @@ select:focus,input:focus{border-color:var(--purple);}
         <div class="mine-row">
           <div class="mine-row-left">
             <div class="mine-row-title">当前版本</div>
-            <div class="mine-row-sub">v1.3.0</div>
+            <div class="mine-row-sub">v1.2.0</div>
           </div>
           <div class="mine-row-right" style="font-size:11px;color:var(--text3);">升级前请先导出备份</div>
         </div>

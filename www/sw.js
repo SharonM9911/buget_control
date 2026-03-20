@@ -1,4 +1,4 @@
-const CACHE = 'budget-tracker-v1.2.0';
+const CACHE = 'budget-tracker-v1.3.0';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
