@@ -257,6 +257,18 @@ select:focus,input:focus{border-color:var(--purple);}
             </label>
           </div>
         </div>
+        <div class="mine-row">
+          <div class="mine-row-left">
+            <div class="mine-row-title">账单结算日</div>
+            <div class="mine-row-sub" id="billing-day-sub">每月 1 日自动开始新周期</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex:none;">
+            <input type="number" id="billing-day-input" min="1" max="28" value="1"
+              style="width:52px;text-align:center;padding:6px 8px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);"
+              onchange="setBillingDay(this.value)"/>
+            <span style="font-size:13px;color:var(--text2);">日</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -336,7 +348,7 @@ select:focus,input:focus{border-color:var(--purple);}
         <div class="mine-row">
           <div class="mine-row-left">
             <div class="mine-row-title">当前版本</div>
-            <div class="mine-row-sub">v1.3.0</div>
+            <div class="mine-row-sub">v1.4.0</div>
           </div>
           <div class="mine-row-right" style="font-size:11px;color:var(--text3);">升级前请先导出备份</div>
         </div>
@@ -364,6 +376,7 @@ const SK='budget_tracker_v1';
 
 let S={
   budgetMode:true,
+  billingDay:1,
   cats:[
     {id:1,icon:'🛒',name:'买菜',budget:800},
     {id:2,icon:'🍿',name:'零食',budget:200},
@@ -378,15 +391,37 @@ let S={
   nid:100,ncid:10,ngid:10
 };
 
+function cycleStart(y,m){return new Date(y,m,S.billingDay||1).getTime();}
+function cycleEnd(y,m){return new Date(y,m+1,S.billingDay||1).getTime();}
+function tsToCycle(ts){
+  const d=new Date(ts),bd=S.billingDay||1;
+  if(d.getDate()>=bd)return{y:d.getFullYear(),m:d.getMonth()};
+  const p=new Date(d.getFullYear(),d.getMonth()-1,1);
+  return{y:p.getFullYear(),m:p.getMonth()};
+}
+function todayCycle(){return tsToCycle(Date.now());}
+function cycleLabel(y,m){
+  const bd=S.billingDay||1;
+  if(bd===1)return y+'年 '+MONTHS[m];
+  const s=new Date(y,m,bd),e=new Date(y,m+1,bd-1);
+  return`${s.getMonth()+1}/${s.getDate()} - ${e.getMonth()+1}/${e.getDate()}`;
+}
+
 function save(){try{localStorage.setItem(SK,JSON.stringify({S,cy,cm}));}catch(e){}}
 function load(){
   try{
     const d=localStorage.getItem(SK);
     if(d){const p=JSON.parse(d);S=p.S;cy=p.cy;cm=p.cm;}
   }catch(e){}
+  if(!S.billingDay)S.billingDay=1;
+  const tc=todayCycle();
+  if(cycleStart(tc.y,tc.m)>cycleStart(cy,cm)){cy=tc.y;cm=tc.m;}
 }
 
-function mTxns(){return S.txns.filter(t=>t.y===cy&&t.m===cm);}
+function mTxns(){
+  const s=cycleStart(cy,cm),e=cycleEnd(cy,cm);
+  return S.txns.filter(t=>t.ts?(t.ts>=s&&t.ts<e):(t.y===cy&&t.m===cm));
+}
 function spent(cid){return mTxns().filter(t=>t.cid===cid).reduce((s,t)=>s+t.amt,0);}
 function totalSaved(gid){const g=S.goals.find(x=>x.id===gid);return g?g.deposits.reduce((s,d)=>s+d.amt,0):0;}
 
@@ -417,7 +452,7 @@ function toggleForm(id){document.getElementById(id).classList.toggle('open');}
 function toggleBackupPanel(){document.getElementById('backup-sub-panel').classList.toggle('open');}
 
 function render(){
-  document.getElementById('mlabel').textContent=cy+'年 '+MONTHS[cm];
+  document.getElementById('mlabel').textContent=cycleLabel(cy,cm);
   renderOverview();
   renderCats();
   renderCatSelect();
@@ -437,7 +472,8 @@ function renderOverview(){
   const barCls=isOver?'bar-over':isWarn?'bar-warn':'bar-ok';
   const pctCls=isOver?'pct-over':isWarn?'pct-warn':'pct-ok';
   document.getElementById('ov-spent').textContent='¥'+Math.round(ts).toLocaleString();
-  document.getElementById('ov-budget').textContent=S.budgetMode!==false?'/ ¥'+tb.toLocaleString()+' 本月预算':'本月消费';
+  const periodWord=(S.billingDay||1)===1?'月':'期';
+  document.getElementById('ov-budget').textContent=S.budgetMode!==false?'/ ¥'+tb.toLocaleString()+' 本'+periodWord+'预算':'本'+periodWord+'消费';
   const bar=document.getElementById('ov-bar');
   bar.style.width=Math.min(100,pctRound)+'%';
   bar.className='overview-bar '+barCls;
@@ -462,7 +498,7 @@ function renderCats(){
     const cc=isOver?'over-c':isWarn?'warn-c':'';
     const overAmt=sp-c.budget;
     const st=!budgetOn
-      ?`<span class="s-ok">本月消费 ¥${Math.round(sp).toLocaleString()}</span>`
+      ?`<span class="s-ok">本${(S.billingDay||1)===1?'月':'期'}消费 ¥${Math.round(sp).toLocaleString()}</span>`
       :isOver&&c.budget===0
       ?`<span class="s-over">预算为 ¥0，已记录 ¥${Math.round(sp).toLocaleString()}</span>`
       :isOver?`<span class="s-over">超出预算 ¥${Math.round(overAmt).toLocaleString()}</span>`
@@ -498,13 +534,15 @@ function renderRecords(){
   if(filterCat)txns=txns.filter(t=>t.cid===parseInt(filterCat));
   if(filterMonth){
     const[fy,fm]=filterMonth.split('-').map(Number);
-    txns=txns.filter(t=>t.y===fy&&t.m===fm);
+    const fs=cycleStart(fy,fm),fe=cycleEnd(fy,fm);
+    txns=txns.filter(t=>t.ts?(t.ts>=fs&&t.ts<fe):(t.y===fy&&t.m===fm));
   }
   document.getElementById('rec-count').textContent=txns.length+'条';
   if(!txns.length){el.innerHTML='<div class="empty">暂无记录</div>';return;}
   const groups={};
   txns.forEach(t=>{
-    const key=t.y+'年'+MONTHS[t.m];
+    const c=t.ts?tsToCycle(t.ts):{y:t.y,m:t.m};
+    const key=cycleLabel(c.y,c.m);
     if(!groups[key])groups[key]=[];
     groups[key].push(t);
   });
@@ -540,10 +578,12 @@ function renderRecordMonthFilter(){
   const sel=document.getElementById('rec-filter-month');
   if(!sel)return;
   const cur=sel.value;
-  const months=[...new Set(S.txns.map(t=>t.y+'-'+t.m))].sort((a,b)=>b.localeCompare(a));
-  sel.innerHTML='<option value="">全部月份</option>'+months.map(m=>{
-    const[y,mo]=m.split('-').map(Number);
-    return `<option value="${m}">${y}年${MONTHS[mo]}</option>`;
+  const cycleSet=new Set();
+  S.txns.forEach(t=>{const c=t.ts?tsToCycle(t.ts):{y:t.y,m:t.m};cycleSet.add(c.y+'-'+c.m);});
+  const sorted=[...cycleSet].sort((a,b)=>b.localeCompare(a));
+  sel.innerHTML='<option value="">全部周期</option>'+sorted.map(k=>{
+    const[y,m]=k.split('-').map(Number);
+    return`<option value="${k}">${cycleLabel(y,m)}</option>`;
   }).join('');
   if(cur)sel.value=cur;
 }
@@ -641,14 +681,33 @@ function renderMine(){
   renderBmList();
   const sub=document.getElementById('budget-mode-sub');
   if(sub)sub.textContent=(S.budgetMode!==false)?'开启后显示限额进度条和预警':'已关闭，仅显示消费总量，不受限额约束';
+  const bd=S.billingDay||1;
+  const bdInput=document.getElementById('billing-day-input');
+  if(bdInput)bdInput.value=bd;
+  const bdSub=document.getElementById('billing-day-sub');
+  if(bdSub)bdSub.textContent=`每月 ${bd} 日自动开始新周期`;
   const stats=document.getElementById('mine-stats');
   if(stats){
-    const months=[...new Set(S.txns.map(t=>t.y+'-'+t.m))].length;
-    stats.textContent=`${S.cats.length} 个分类 · ${S.txns.length} 条记录（跨 ${months} 个月）· ${S.goals.length} 个目标`;
+    const cycles=new Set(S.txns.map(t=>{const c=t.ts?tsToCycle(t.ts):{y:t.y,m:t.m};return c.y+'-'+c.m;})).size;
+    stats.textContent=`${S.cats.length} 个分类 · ${S.txns.length} 条记录（跨 ${cycles} 个周期）· ${S.goals.length} 个目标`;
   }
   const lt=localStorage.getItem('budget_last_backup');
   const el=document.getElementById('mine-lastbackup');
   if(el)el.textContent='上次备份：'+(lt||'从未');
+}
+
+function setBillingDay(val){
+  const n=parseInt(val);
+  if(isNaN(n)||n<1||n>28){
+    toast('结算日需为 1-28 之间的整数');
+    const el=document.getElementById('billing-day-input');
+    if(el)el.value=S.billingDay||1;
+    return;
+  }
+  S.billingDay=n;
+  const tc=todayCycle();cy=tc.y;cm=tc.m;
+  save();render();renderRecordMonthFilter();
+  toast(`结算日已设为每月 ${n} 日`);
 }
 
 function addExp(){
