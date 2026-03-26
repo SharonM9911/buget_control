@@ -277,7 +277,7 @@ select:focus,input:focus{border-color:var(--purple);}
           <div class="mine-row-arrow">›</div>
         </div>
         <div class="backup-sub-panel" id="budget-manage-panel">
-          <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;">直接修改金额即可，实时保存</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">直接修改金额即可，实时保存</div>
           <div id="bm-list"></div>
         </div>
         <div class="mine-row tappable" onclick="toggleCatManage()">
@@ -288,14 +288,14 @@ select:focus,input:focus{border-color:var(--purple);}
           <div class="mine-row-arrow">›</div>
         </div>
         <div class="backup-sub-panel" id="cat-manage-panel">
-          <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;">删除分类不会删除消费记录，记录将标记为未分类</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">删除分类不会删除消费记录，记录将标记为未分类</div>
           <div id="cat-list"></div>
           <div style="margin-top:10px;">
             <button class="btn-sm" onclick="toggleForm('addcat-form-mine')">+ 新增分类</button>
           </div>
           <div class="addform" id="addcat-form-mine" style="margin-top:8px;padding:0;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <span style="font-size:12px;color:var(--color-text-secondary);font-weight:500;">新增分类</span>
+              <span style="font-size:12px;color:var(--text2);font-weight:500;">新增分类</span>
               <button class="btn-sm" onclick="toggleForm('addcat-form-mine')">✕ 关闭</button>
             </div>
             <div class="frow" style="margin-bottom:8px;">
@@ -609,11 +609,11 @@ function renderBmList(){
   if(!el)return;
   el.innerHTML=S.cats.map(c=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <div style="flex:1;font-size:13px;color:var(--color-text-primary);">${c.icon} ${c.name}</div>
-      <div style="display:flex;align-items:center;gap:0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);overflow:hidden;transition:border-color 0.15s;" id="bm-wrap-${c.id}">
-        <span style="padding:0 7px;font-size:13px;color:var(--color-text-tertiary);background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);line-height:32px;">¥</span>
+      <div style="flex:1;font-size:13px;color:var(--text);">${c.icon} ${c.name}</div>
+      <div style="display:flex;align-items:center;gap:0;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);overflow:hidden;transition:border-color 0.15s;" id="bm-wrap-${c.id}">
+        <span style="padding:0 7px;font-size:13px;color:var(--text3);background:var(--bg2);border-right:0.5px solid var(--border2);line-height:32px;">¥</span>
         <input type="number" value="${c.budget}" placeholder="0"
-          style="width:72px;font-size:13px;padding:6px 8px;border:none;background:transparent;color:var(--color-text-primary);outline:none;"
+          style="width:72px;font-size:13px;padding:6px 8px;border:none;background:transparent;color:var(--text);outline:none;"
           onchange="editBudgetInline(${c.id},this.value)"
           onfocus="document.getElementById('bm-wrap-${c.id}').style.borderColor='#3C3489'"
           onblur="document.getElementById('bm-wrap-${c.id}').style.borderColor=''"/>
@@ -627,7 +627,7 @@ function renderCatList(){
   if(!el)return;
   el.innerHTML=S.cats.map(c=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-      <div style="flex:1;font-size:13px;color:var(--color-text-primary);">${c.icon} ${c.name}</div>
+      <div style="flex:1;font-size:13px;color:var(--text);">${c.icon} ${c.name}</div>
       <button class="btn-sm" onclick="delCat(${c.id})" style="color:#A32D2D;border-color:#A32D2D;">删除</button>
     </div>
   `).join('');
@@ -829,12 +829,12 @@ function showConfirm(title, msg, onOk){
   const overlay=document.createElement('div');
   overlay.id='custom-confirm';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;justify-content:center;z-index:9999;padding-bottom:env(safe-area-inset-bottom,0);';
-  overlay.innerHTML=`<div style="background:var(--color-background-primary);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px 20px 12px;">
-    <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;">${title}</div>
-    <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:20px;">${msg}</div>
+  overlay.innerHTML=`<div style="background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px 20px 12px;">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">${title}</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">${msg}</div>
     <div style="display:flex;gap:8px;">
-      <button onclick="document.getElementById('custom-confirm').remove()" style="flex:1;padding:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);background:var(--color-background-secondary);font-size:14px;cursor:pointer;color:var(--color-text-primary);">取消</button>
-      <button id="confirm-ok-btn" style="flex:1;padding:12px;border:none;border-radius:var(--border-radius-lg);background:#A32D2D;font-size:14px;cursor:pointer;color:white;font-weight:500;">确认删除</button>
+      <button onclick="document.getElementById('custom-confirm').remove()" style="flex:1;padding:12px;border:0.5px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);font-size:14px;cursor:pointer;color:var(--text);">取消</button>
+      <button id="confirm-ok-btn" style="flex:1;padding:12px;border:none;border-radius:var(--radius-lg);background:#A32D2D;font-size:14px;cursor:pointer;color:white;font-weight:500;">确认删除</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);

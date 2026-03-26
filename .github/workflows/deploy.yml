@@ -1,8 +1,10 @@
 name: 部署到 GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["构建 Android APK"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,12 +19,19 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+
+      - name: 注入构建号到 Service Worker
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          sed -i "s/budget-tracker-v[0-9][0-9.]*/budget-tracker-v${VERSION}-build${{ github.run_number }}/g" www/sw.js
+          echo "SW 缓存版本已更新为 budget-tracker-v${VERSION}-build${{ github.run_number }}"
 
       - name: 配置 Pages
         uses: actions/configure-pages@v4

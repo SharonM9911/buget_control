@@ -25,6 +25,14 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: 验证 www 目录完整性
+        run: |
+          test -f www/index.html    || (echo "::error::缺少 www/index.html" && exit 1)
+          test -f www/manifest.json || (echo "::error::缺少 www/manifest.json" && exit 1)
+          test -f www/sw.js         || (echo "::error::缺少 www/sw.js" && exit 1)
+          test -f www/icons/icon-192.png || (echo "::error::缺少 www/icons/icon-192.png" && exit 1)
+          test -f www/icons/icon-512.png || (echo "::error::缺少 www/icons/icon-512.png" && exit 1)
+
       - name: 安装依赖
         run: npm install
 
@@ -36,6 +44,15 @@ jobs:
 
       - name: 同步文件到 Android
         run: npx cap sync android
+
+      - name: 缓存 Gradle 依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
 
       - name: 赋予 gradlew 执行权限
         run: chmod +x android/gradlew
@@ -60,7 +77,11 @@ jobs:
             --out android/app/build/outputs/apk/debug/app-signed.apk \
             android/app/build/outputs/apk/debug/app-debug.apk
 
-      - name: 上传 APK
+      - name: 获取版本号
+        id: version
+        run: echo "ver=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+
+      - name: 上传 APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: budget-tracker-apk
@@ -68,3 +89,16 @@ jobs:
             android/app/build/outputs/apk/debug/app-signed.apk
             android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: 发布 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.ver }}-build${{ github.run_number }}
+          name: "预算追踪 v${{ steps.version.outputs.ver }} (build ${{ github.run_number }})"
+          body: |
+            自动构建发布
+
+            - 提交：${{ github.sha }}
+            - 分支：${{ github.ref_name }}
+          files: android/app/build/outputs/apk/debug/app-signed.apk
+          make_latest: true
