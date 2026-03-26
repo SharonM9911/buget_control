@@ -79,7 +79,7 @@ jobs:
 
       - name: 获取版本号
         id: version
-        run: echo "ver=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+        run: echo "ver=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
       - name: 上传 APK Artifact
         uses: actions/upload-artifact@v4
