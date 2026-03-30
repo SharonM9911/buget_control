@@ -403,6 +403,7 @@ let now=new Date(),cy=now.getFullYear(),cm=now.getMonth();
 const SK='budget_tracker_v1';
 const DEFAULT_TAG_LIB=['演唱会','音乐会','展览','旅行','出差','聚餐','工作报销','家庭支出'];
 let pendingTags=[];
+let locExpanded=false;
 
 let S={
   budgetMode:true,
@@ -760,22 +761,50 @@ function renderTagInput(){
   if(!wrap)return;
   const quick=quickTags();
   const escQ=s=>s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const hasGeo=!!navigator.geolocation;
+  const locRow=hasGeo?(locExpanded?`
+    <div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text3);flex:none;">📍 位置：</span>
+      <button onclick="getLocationAuto()"
+        style="font-size:12px;padding:4px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;flex:none;">
+        📡 自动定位
+      </button>
+      <input id="loc-manual-input" type="text" placeholder="手动输入地点" maxlength="20"
+        style="flex:1;min-width:80px;font-size:12px;padding:4px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"
+        onkeydown="if(event.key==='Enter'){addManualLocation();}"/>
+      <button onclick="addManualLocation()"
+        style="font-size:12px;padding:4px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;flex:none;">✓</button>
+      <button onclick="locExpanded=false;renderTagInput()"
+        style="font-size:12px;padding:4px 8px;border:none;background:none;color:var(--text3);cursor:pointer;flex:none;">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px;">自动定位将请求定位权限，仅用于标记地点，不上传任何数据</div>`
+  :`<button onclick="locExpanded=true;renderTagInput()" title="添加位置标签"
+      style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;line-height:1;flex:none;">📍</button>`):'';
   wrap.innerHTML=`
     <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:28px;">
       ${pendingTags.map(t=>`<span class="tag-sel">${t}<span class="tag-rm" onclick="removeTagChip('${escQ(t)}')">×</span></span>`).join('')}
       <input id="tag-text-input" type="text" placeholder="${pendingTags.length?'继续添加…':'添加标签'}" maxlength="20"
         style="border:none;background:transparent;outline:none;font-size:12px;color:var(--text);min-width:72px;flex:1;padding:2px 0;"
         onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addTagChip(this.value);this.value='';}"/>
-      ${navigator.geolocation?`<button onclick="getLocation()" title="获取当前位置"
-        style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;line-height:1;flex:none;">📍</button>`:''}
+      ${locRow&&!locExpanded?locRow:''}
     </div>
+    ${locExpanded?locRow:''}
     ${quick.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">${quick.map(t=>`<span class="tag-quick" onclick="addTagChip('${escQ(t)}')">${t}</span>`).join('')}</div>`:''}
-    ${navigator.geolocation?`<div style="font-size:11px;color:var(--text3);margin-top:5px;">点击 📍 将请求定位权限，仅用于标记消费地点，不上传任何数据</div>`:''}
   `;
 }
 
-async function getLocation(){
+function addManualLocation(){
+  const inp=document.getElementById('loc-manual-input');
+  const val=(inp?.value||'').trim();
+  if(!val){toast('请输入地点名称');return;}
+  addTagChip('📍 '+val);
+  locExpanded=false;
+}
+
+async function getLocationAuto(){
   if(!navigator.geolocation){toast('当前环境不支持定位');return;}
+  locExpanded=false;
+  renderTagInput();
   toast('正在获取位置…');
   navigator.geolocation.getCurrentPosition(async pos=>{
     const{latitude:lat,longitude:lng}=pos.coords;
@@ -870,6 +899,7 @@ function addExp(){
   document.getElementById('exp-amt').value='';
   document.getElementById('exp-note').value='';
   pendingTags.length=0;
+  locExpanded=false;
   save();render();renderRecordMonthFilter();renderTagFilter();
   const nsp=spent(cid),p=nsp/cat.budget;
   if(willOver)toast(`「${cat.name}」已超出预算，已标记`);
