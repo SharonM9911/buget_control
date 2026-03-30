@@ -5,13 +5,19 @@ set -e
 MANIFEST="android/app/src/main/AndroidManifest.xml"
 MAIN_ACTIVITY="android/app/src/main/java/com/sharon/budgettracker/MainActivity.java"
 
-# 1. 添加文件权限
+# 1. 添加文件权限 + 定位权限
 if [ -f "$MANIFEST" ]; then
   if ! grep -q "WRITE_EXTERNAL_STORAGE" "$MANIFEST"; then
     sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />|' "$MANIFEST"
-    echo "[1/2] Permissions added"
+    echo "[1/3] Storage permissions added"
   else
-    echo "[1/2] Permissions already exist"
+    echo "[1/3] Storage permissions already exist"
+  fi
+  if ! grep -q "ACCESS_FINE_LOCATION" "$MANIFEST"; then
+    sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />|' "$MANIFEST"
+    echo "[2/3] Location permissions added"
+  else
+    echo "[2/3] Location permissions already exist"
   fi
 fi
 

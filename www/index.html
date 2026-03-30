@@ -143,6 +143,13 @@ select:focus,input:focus{border-color:var(--purple);}
 .toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:999;}
 .toast{background:var(--purple);color:var(--purple-light);padding:10px 20px;border-radius:var(--radius-lg);font-size:13px;opacity:0;transition:opacity 0.25s;white-space:nowrap;}
 .toast.show{opacity:1;}
+.tag-active{background:var(--purple-light);color:var(--purple);border-color:var(--purple);}
+.tag-sel{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:3px 8px;border-radius:10px;background:var(--purple-light);color:var(--purple);border:0.5px solid var(--purple);white-space:nowrap;}
+.tag-rm{cursor:pointer;font-size:13px;line-height:1;opacity:0.6;margin-left:1px;}
+.tag-rm:active{opacity:1;}
+.tag-quick{font-size:12px;padding:3px 9px;border-radius:10px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border2);cursor:pointer;white-space:nowrap;}
+.tag-quick:active{background:var(--purple-light);color:var(--purple);}
+.tag-input-area{background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border2);padding:8px 10px;margin-top:8px;}
 </style>
 </head>
 <body>
@@ -190,6 +197,7 @@ select:focus,input:focus{border-color:var(--purple);}
         <input type="text" id="exp-note" placeholder="备注（如：买了昂贵水果）"/>
         <button class="btn" onclick="addExp()">记录</button>
       </div>
+      <div class="tag-input-area" id="tag-input-wrap"></div>
     </div>
     <div class="cats" id="cats-list"></div>
 
@@ -203,6 +211,9 @@ select:focus,input:focus{border-color:var(--purple);}
         <option value="">全部分类</option>
       </select>
       <select id="rec-filter-month" onchange="renderRecords()" style="flex:1;font-size:13px;padding:7px 10px;"></select>
+    </div>
+    <div class="records-filter" style="margin-top:-6px;">
+      <select id="rec-filter-tag" onchange="renderRecords()" style="flex:1;font-size:13px;padding:7px 10px;"></select>
       <span class="records-count" id="rec-count"></span>
     </div>
     <div id="records-list"></div>
@@ -320,6 +331,23 @@ select:focus,input:focus{border-color:var(--purple);}
             </div>
           </div>
         </div>
+        <div class="mine-row tappable" onclick="toggleTagLibManage()">
+          <div class="mine-row-left">
+            <div class="mine-row-title">管理标签库</div>
+            <div class="mine-row-sub">设置记账时的快捷标签</div>
+          </div>
+          <div class="mine-row-arrow">›</div>
+        </div>
+        <div class="backup-sub-panel" id="tag-lib-panel">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">删除预设标签不影响历史记录</div>
+          <div id="tag-lib-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="new-tag-lib-input" placeholder="新标签名称" maxlength="20"
+              style="flex:1;font-size:13px;padding:6px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"
+              onkeydown="if(event.key==='Enter'){addTagToLib(this.value);}"/>
+            <button class="btn-sm" onclick="addTagToLib(document.getElementById('new-tag-lib-input').value)">添加</button>
+          </div>
+        </div>
         <div class="mine-row tappable" onclick="toggleBackupPanel()">
           <div class="mine-row-left">
             <div class="mine-row-title">备份与恢复</div>
@@ -348,7 +376,7 @@ select:focus,input:focus{border-color:var(--purple);}
         <div class="mine-row">
           <div class="mine-row-left">
             <div class="mine-row-title">当前版本</div>
-            <div class="mine-row-sub">v1.4.0</div>
+            <div class="mine-row-sub">v1.5.0</div>
           </div>
           <div class="mine-row-right" style="font-size:11px;color:var(--text3);">升级前请先导出备份</div>
         </div>
@@ -373,10 +401,13 @@ select:focus,input:focus{border-color:var(--purple);}
 const MONTHS=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 let now=new Date(),cy=now.getFullYear(),cm=now.getMonth();
 const SK='budget_tracker_v1';
+const DEFAULT_TAG_LIB=['演唱会','音乐会','展览','旅行','出差','聚餐','工作报销','家庭支出'];
+let pendingTags=[];
 
 let S={
   budgetMode:true,
   billingDay:1,
+  tagLib:[...DEFAULT_TAG_LIB],
   cats:[
     {id:1,icon:'🛒',name:'买菜',budget:800},
     {id:2,icon:'🍿',name:'零食',budget:200},
@@ -414,6 +445,7 @@ function load(){
     if(d){const p=JSON.parse(d);S=p.S;cy=p.cy;cm=p.cm;}
   }catch(e){}
   if(!S.billingDay)S.billingDay=1;
+  if(!S.tagLib)S.tagLib=[...DEFAULT_TAG_LIB];
   const tc=todayCycle();
   if(cycleStart(tc.y,tc.m)>cycleStart(cy,cm)){cy=tc.y;cm=tc.m;}
 }
@@ -456,7 +488,9 @@ function render(){
   renderOverview();
   renderCats();
   renderCatSelect();
+  renderTagInput();
   renderRecords();
+  renderTagFilter();
   renderGoals();
   renderGoalSelect();
   renderMine();
@@ -530,8 +564,10 @@ function renderRecords(){
   if(!el)return;
   const filterCat=document.getElementById('rec-filter-cat')?.value||'';
   const filterMonth=document.getElementById('rec-filter-month')?.value||'';
+  const filterTag=document.getElementById('rec-filter-tag')?.value||'';
   let txns=[...S.txns].reverse();
   if(filterCat)txns=txns.filter(t=>t.cid===parseInt(filterCat));
+  if(filterTag)txns=txns.filter(t=>t.tags?.includes(filterTag));
   if(filterMonth){
     const[fy,fm]=filterMonth.split('-').map(Number);
     const fs=cycleStart(fy,fm),fe=cycleEnd(fy,fm);
@@ -555,7 +591,7 @@ function renderRecords(){
         const catBudget=cat?cat.budget:0;
         const catSpent=spent(t.cid);
         const isOverBudget=catSpent>catBudget&&catBudget>0;
-        const tagsHtml=t.tags&&t.tags.length?`<div class="record-tags">${t.tags.map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>`:'';
+        const tagsHtml=t.tags&&t.tags.length?`<div class="record-tags">${t.tags.map(tag=>`<span class="tag${filterTag&&tag===filterTag?' tag-active':''}">${tag}</span>`).join('')}</div>`:'';
         const timeStr=t.ts?fmtTime(t.ts):'';
         return `<div class="record-item">
           <div class="record-item-l">
@@ -684,6 +720,7 @@ function renderMine(){
   const bd=S.billingDay||1;
   const bdInput=document.getElementById('billing-day-input');
   if(bdInput)bdInput.value=bd;
+  renderTagLib();
   const bdSub=document.getElementById('billing-day-sub');
   if(bdSub)bdSub.textContent=`每月 ${bd} 日自动开始新周期`;
   const stats=document.getElementById('mine-stats');
@@ -696,6 +733,114 @@ function renderMine(){
   if(el)el.textContent='上次备份：'+(lt||'从未');
 }
 
+// ── 标签相关 ──────────────────────────────────────────────
+function quickTags(){
+  if(S.tagLib&&S.tagLib.length)return S.tagLib;
+  const freq={};
+  S.txns.forEach(t=>t.tags?.forEach(tag=>{
+    if(!tag.startsWith('📍'))freq[tag]=(freq[tag]||0)+1;
+  }));
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,6).map(e=>e[0]);
+}
+
+function addTagChip(tag){
+  tag=tag.trim().slice(0,20);
+  if(!tag||pendingTags.includes(tag))return;
+  pendingTags.push(tag);
+  renderTagInput();
+}
+
+function removeTagChip(tag){
+  pendingTags=pendingTags.filter(t=>t!==tag);
+  renderTagInput();
+}
+
+function renderTagInput(){
+  const wrap=document.getElementById('tag-input-wrap');
+  if(!wrap)return;
+  const quick=quickTags();
+  const escQ=s=>s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  wrap.innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:28px;">
+      ${pendingTags.map(t=>`<span class="tag-sel">${t}<span class="tag-rm" onclick="removeTagChip('${escQ(t)}')">×</span></span>`).join('')}
+      <input id="tag-text-input" type="text" placeholder="${pendingTags.length?'继续添加…':'添加标签'}" maxlength="20"
+        style="border:none;background:transparent;outline:none;font-size:12px;color:var(--text);min-width:72px;flex:1;padding:2px 0;"
+        onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addTagChip(this.value);this.value='';}"/>
+      ${navigator.geolocation?`<button onclick="getLocation()" title="获取当前位置"
+        style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;line-height:1;flex:none;">📍</button>`:''}
+    </div>
+    ${quick.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">${quick.map(t=>`<span class="tag-quick" onclick="addTagChip('${escQ(t)}')">${t}</span>`).join('')}</div>`:''}
+    ${navigator.geolocation?`<div style="font-size:11px;color:var(--text3);margin-top:5px;">点击 📍 将请求定位权限，仅用于标记消费地点，不上传任何数据</div>`:''}
+  `;
+}
+
+async function getLocation(){
+  if(!navigator.geolocation){toast('当前环境不支持定位');return;}
+  toast('正在获取位置…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    try{
+      const ctrl=new AbortController();
+      setTimeout(()=>ctrl.abort(),5000);
+      const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=zh`,{signal:ctrl.signal});
+      const d=await r.json();
+      const name=d.locality||d.city||d.principalSubdivision||'未知位置';
+      addTagChip('📍 '+name);
+    }catch(e){
+      addTagChip(`📍 ${lat.toFixed(4)},${lng.toFixed(4)}`);
+    }
+  },err=>{
+    const msgs={1:'定位权限被拒绝',2:'无法获取位置',3:'获取位置超时'};
+    toast('获取位置失败：'+(msgs[err.code]||err.message));
+  },{timeout:10000,maximumAge:60000});
+}
+
+function renderTagLib(){
+  const el=document.getElementById('tag-lib-list');
+  if(!el)return;
+  const lib=S.tagLib||[];
+  const escQ=s=>s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  el.innerHTML=lib.length
+    ?lib.map(t=>`<span class="tag-sel">${t}<span class="tag-rm" onclick="removeTagFromLib('${escQ(t)}')">×</span></span>`).join('')
+    :'<span style="font-size:12px;color:var(--text3);">暂无预设标签，点击下方添加</span>';
+}
+
+function addTagToLib(name){
+  name=(name||'').trim().slice(0,20);
+  if(!name){toast('请输入标签名');return;}
+  if(!S.tagLib)S.tagLib=[];
+  if(S.tagLib.includes(name)){toast(`「${name}」已存在`);return;}
+  S.tagLib.push(name);
+  save();renderTagLib();renderTagInput();
+  const inp=document.getElementById('new-tag-lib-input');
+  if(inp)inp.value='';
+  toast(`已添加「${name}」`);
+}
+
+function removeTagFromLib(name){
+  if(!S.tagLib)return;
+  S.tagLib=S.tagLib.filter(t=>t!==name);
+  save();renderTagLib();renderTagInput();
+  toast(`已移除「${name}」`);
+}
+
+function renderTagFilter(){
+  const sel=document.getElementById('rec-filter-tag');
+  if(!sel)return;
+  const cur=sel.value;
+  const tagSet=new Set();
+  S.txns.forEach(t=>t.tags?.forEach(tag=>tagSet.add(tag)));
+  const tags=[...tagSet].sort();
+  sel.innerHTML='<option value="">全部标签</option>'+tags.map(t=>`<option value="${t}">${t}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+function toggleTagLibManage(){
+  document.getElementById('tag-lib-panel').classList.toggle('open');
+  renderTagLib();
+}
+
+// ── 结算日设置 ─────────────────────────────────────────────
 function setBillingDay(val){
   const n=parseInt(val);
   if(isNaN(n)||n<1||n>28){
@@ -720,10 +865,12 @@ function addExp(){
   const sp=spent(cid);
   const budgetOn=S.budgetMode!==false;
   const willOver=budgetOn&&sp+amt>cat.budget;
-  S.txns.push({id:S.nid++,cid,amt,note,tags:[],y:cy,m:cm,ts:Date.now()});
+  const tags=[...pendingTags];
+  S.txns.push({id:S.nid++,cid,amt,note,tags,y:cy,m:cm,ts:Date.now()});
   document.getElementById('exp-amt').value='';
   document.getElementById('exp-note').value='';
-  save();render();renderRecordMonthFilter();
+  pendingTags.length=0;
+  save();render();renderRecordMonthFilter();renderTagFilter();
   const nsp=spent(cid),p=nsp/cat.budget;
   if(willOver)toast(`「${cat.name}」已超出预算，已标记`);
   else if(p>=0.8)toast(`注意：「${cat.name}」已用 ${Math.round(p*100)}%`);
